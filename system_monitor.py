@@ -3,22 +3,53 @@ from datetime import datetime
 
 log_file = "system_log.txt"
 
-with open(log_file, "a") as f:
-    f.write(f"\n===== {datetime.now()} =====\n")
+def get_cpu_usage():
+    cpu_line = os.popen("top -b -n1 | grep 'Cpu(s)'").read()
+    parts = cpu_line.split()
 
-    cpu_output = os.popen("top -b -n1 | head -5").read()
-    f.write("\nCPU Usage:\n")
-    f.write(cpu_output)
+    try:
+        idle = float(parts[7])
+        return 100 - idle
+    except:
+        return 0.0  # fallback safety
 
-    # 🚨 ALERT LOGIC
-    cpu_line = cpu_output.split("\n")[2]
-    cpu_usage = float(cpu_line.split(",")[0].split()[1])
+def get_disk_usage():
+    disk_output = os.popen("df -h /").read()
+    lines = disk_output.strip().split("\n")
 
-    if cpu_usage > 80:
-        f.write("\n🚨 ALERT: High CPU Usage!\n")
+    usage_percent = 0
 
-    f.write("\nMemory Usage:\n")
-    f.write(os.popen("free -h").read())
+    if len(lines) > 1:
+        try:
+            usage = lines[1].split()[4]
+            usage_percent = int(usage.replace('%', ''))
+        except:
+            usage_percent = 0
 
-    f.write("\nDisk Usage:\n")
-    f.write(os.popen("df -h").read())
+    return disk_output, usage_percent
+
+def main():
+    cpu_usage = get_cpu_usage()
+    disk_output, disk_usage = get_disk_usage()
+
+    with open(log_file, "a") as f:
+        f.write(f"\n===== {datetime.now()} =====\n")
+
+        # CPU
+        f.write(f"\nCPU Usage: {cpu_usage:.2f}%\n")
+        if cpu_usage > 80:
+            f.write("⚠️ ALERT: High CPU Usage!\n")
+
+        # Memory
+        f.write("\nMemory Usage:\n")
+        f.write(os.popen("free -h").read())
+
+        # Disk
+        f.write("\nDisk Usage:\n")
+        f.write(disk_output)
+
+        if disk_usage > 80:
+            f.write("⚠️ ALERT: Disk usage above 80%!\n")
+
+if __name__ == "__main__":
+    main()
