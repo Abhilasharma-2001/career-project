@@ -1,0 +1,39 @@
+from flask import Flask, render_template_string
+import os
+
+app = Flask(__name__)
+
+LOG_FILE = "system_log.txt"
+
+HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>System Monitor Dashboard</title>
+    <meta http-equiv="refresh" content="5">
+    <style>
+        body { font-family: Arial; background: #111; color: #0f0; padding: 20px; }
+        h1 { color: #0ff; }
+        pre { background: #000; padding: 15px; border-radius: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🚀 System Monitoring Dashboard</h1>
+    <h3>Live Logs (Auto Refresh every 5 sec)</h3>
+    <pre>{{ logs }}</pre>
+</body>
+</html>
+"""
+
+@app.route("/")
+def home():
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r") as f:
+            logs = f.read()
+    else:
+        logs = "No logs yet..."
+
+    return render_template_string(HTML, logs=logs)
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5000)

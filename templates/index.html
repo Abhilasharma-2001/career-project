@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+  <head>
+    <title>System Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: Arial;
+        text-align: center;
+        background: #111;
+        color: white;
+      }
+      .card {
+        display: inline-block;
+        padding: 20px;
+        margin: 20px;
+        border-radius: 15px;
+        width: 220px;
+        transition: transform 0.3s ease;
+      }
+
+      .card:hover {
+        transform: scale(1.05);
+      }
+      .cpu {
+        background: #ff4c4c;
+      }
+      .memory {
+        background: #4caf50;
+      }
+      .disk {
+        background: #2196f3;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🚀 System Monitoring Dashboard</h1>
+
+    <div class="card cpu">
+      <h2>CPU</h2>
+      <p id="cpuValue">{{ cpu }}%</p>
+    </div>
+
+    <div class="card memory">
+      <h2>Memory</h2>
+      <p>{{ memory }}%</p>
+    </div>
+
+    <div class="card disk">
+      <h2>Disk</h2>
+      <p>{{ disk }}%</p>
+    </div>
+
+    <canvas id="cpuChart" width="400" height="200"></canvas>
+
+    <script>
+      let cpuData = [];
+      let labels = [];
+
+      const ctx = document.getElementById("cpuChart").getContext("2d");
+
+      const chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "CPU Usage %",
+              data: cpuData,
+              borderColor: "red",
+              fill: false,
+            },
+          ],
+        },
+      });
+
+      function updateChart() {
+        fetch("/cpu")
+          .then((res) => res.json())
+          .then((data) => {
+            let time = new Date().toLocaleTimeString();
+            labels.push(time);
+            cpuData.push(data.cpu);
+
+            if (labels.length > 10) {
+              labels.shift();
+              cpuData.shift();
+            }
+
+            chart.update();
+
+            // Update CPU text
+            let cpuElement = document.getElementById("cpuValue");
+            cpuElement.innerText = data.cpu + "%";
+
+            // 🔥 COLOR ALERT LOGIC
+            if (data.cpu > 70) {
+              cpuElement.style.color = "red";
+            } else if (data.cpu > 40) {
+              cpuElement.style.color = "orange";
+            } else {
+              cpuElement.style.color = "lightgreen";
+            }
+          });
+      }
+    </script>
+  </body>
+</html>
