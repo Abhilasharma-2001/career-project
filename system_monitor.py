@@ -2,6 +2,9 @@ import os
 from datetime import datetime
 
 log_file = "system_log.txt"
+# Limit log file size (1 MB)
+if os.path.exists(log_file) and os.path.getsize(log_file) > 1_000_000:
+    os.remove(log_file)
 
 def get_cpu_usage():
     cpu_line = os.popen("top -b -n1 | grep 'Cpu(s)'").read()
@@ -14,19 +17,20 @@ def get_cpu_usage():
         return 0.0  # fallback safety
 
 def get_disk_usage():
-    disk_output = os.popen("df -h /").read()
-    lines = disk_output.strip().split("\n")
+    try:
+        disk_output = os.popen("df -h /").read()
+        lines = disk_output.strip().split("\n")
 
-    usage_percent = 0
+        usage_percent = 0
 
-    if len(lines) > 1:
-        try:
+        if len(lines) > 1:
             usage = lines[1].split()[4]
             usage_percent = int(usage.replace('%', ''))
-        except:
-            usage_percent = 0
 
-    return disk_output, usage_percent
+        return disk_output, usage_percent
+
+    except:
+        return "Error fetching disk usage\n", 
 
 def main():
     cpu_usage = get_cpu_usage()
