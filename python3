@@ -20,6 +20,7 @@ HTML = """
 <body>
     <h1>🚀 System Monitoring Dashboard</h1>
     <h3>Live Logs (Auto Refresh every 5 sec)</h3>
+     <h3>logs updated<h3>
     <pre>{{ logs }}</pre>
 </body>
 </html>
